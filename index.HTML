@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Call Role Play — Arama Tipine Göre Senaryo Motoru</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:#666; --line:#e7e7ee;
+      --blue:#2b6cff; --blue2:#eaf1ff; --gray:#f3f4f7; --chip:#f2f2f7;
+      --good:#1d7a2c; --warn:#7a4b00; --bad:#b42318;
+      --shadow: 0 8px 24px rgba(0,0,0,.06);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1220px;margin:0 auto;padding:18px}
+    .topbar{
+      display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+      background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+      padding:12px 14px; box-shadow:var(--shadow);
+    }
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:34px;height:34px;border-radius:10px;background:var(--blue2);display:grid;place-items:center;font-size:18px}
+    h1{font-size:18px;margin:0}
+    .muted{color:var(--muted);font-size:13px}
+    .badge{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip)}
+    .badge.ok{border-color:#cfe8d1;background:#f0fff1;color:var(--good)}
+    .badge.warn{border-color:#f3d5a6;background:#fff7ea;color:var(--warn)}
+    .badge.bad{border-color:#ffd0cc;background:#fff1f0;color:var(--bad)}
+    .grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-top:14px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card-h{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .card-b{padding:12px 14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .field{flex:1;min-width:220px}
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    select,input[type="range"],input[type="text"]{width:100%;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .stage{
+      font-weight:800;font-size:12px;padding:6px 10px;border-radius:999px;background:var(--blue2);color:#1343b6;border:1px solid #d9e6ff
+    }
+    .chat{height:480px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:10px}
+    .bub{max-width:88%;padding:10px 12px;border-radius:14px;line-height:1.35;border:1px solid var(--line);white-space:pre-wrap}
+    .cust{align-self:flex-start;background:var(--gray)}
+    .agent{align-self:flex-end;background:var(--blue2);border-color:#d9e6ff}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{
+      padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;
+      font-weight:700
+    }
+    button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .pill{border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px}
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .kpi b{font-size:18px}
+    .tip{background:var(--chip);border:1px dashed #d9d9e6}
+    .divider{height:1px;background:var(--line);margin:10px 0}
+    .mini{font-size:12px;color:var(--muted)}
+    .quick button{padding:9px 10px;font-weight:700}
+    .lockline{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .lockdot{width:8px;height:8px;border-radius:999px;background:var(--bad);margin-top:6px}
+    .lockdot.ok{background:var(--good)}
+    .lockitem{flex:1;min-width:260px}
+
+    /* Modal (Quiz) */
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:18px
+    }
+    .modal{
+      width:min(780px,100%);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)
+    }
+    .modal-h{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .modal-b{padding:12px 14px}
+    .q{padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;margin:10px 0}
+    .q h4{margin:0 0 8px;font-size:14px}
+    .opt{display:flex;gap:10px;align-items:flex-start;margin:6px 0}
+    .opt input{margin-top:3px}
+    .resultBox{border:1px solid var(--line);border-radius:14px;background:var(--gray);padding:10px}
+    .copy{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;white-space:pre-wrap}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">🎧</div>
+        <div>
+          <h1>Call Role Play — Arama Tipine Göre Senaryo Motoru</h1>
+          <div class="muted">Chrome/Edge önerilir · Mikrofon izni gerekir · Tek sayfa demo</div>
+        </div>
+      </div>
+      <div class="row">
+        <div id="scenarioChip" class="badge">Senaryo: —</div>
+        <div id="stageChip" class="stage">Aşama: 0/4</div>
+        <div id="compat" class="badge warn">Kontrol ediliyor…</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="card-h">
+          <div>
+            <div style="font-weight:900">Görüşme Simülasyonu</div>
+            <div class="muted" id="status">Durum: beklemede</div>
+          </div>
+          <div class="row">
+            <button id="endBtn">✅ Görüşmeyi Bitir</button>
+            <button id="resetBtn">↺ Sıfırla</button>
+          </div>
+        </div>
+
+        <div class="card-b">
+          <div class="row">
+            <div class="field">
+              <label>Arama Tipi</label>
+              <select id="callType">
+                <option value="sktt_sales" selected>SKTT Satış (İkili Anlaşma)</option>
+                <option value="sktt_info">SKTT Bilgilendirme</option>
+                <option value="tariff_info">Kademeli/Ulusal Tarife Bilgi</option>
+                <option value="iys_kvkk">İYS/KVKK İzin</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Müşteri Profili</label>
+              <select id="persona">
+                <option value="calm">Sakin</option>
+                <option value="talkative" selected>Konuşkan</option>
+                <option value="angry">Öfkeli</option>
+                <option value="bargainer">Pazarlıkçı</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Konuşkanlık (1–10)</label>
+              <input id="talk" type="range" min="1" max="10" value="8" />
+              <div class="mini"><span id="talkVal">8</span>/10</div>
+            </div>
+
+            <div class="field">
+              <label>Asistan Adı (opsiyonel)</label>
+              <input id="agentName" type="text" placeholder="Örn: Fatih / 1234" />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="pill tip">
+            <div style="font-weight:900;margin-bottom:6px">Kilitler</div>
+            <div class="lockline">
+              <div class="lockitem">
+                <div class="row" style="align-items:flex-start;gap:8px">
+                  <span id="lockDotEmp" class="lockdot"></span>
+                  <div>
+                    <div style="font-weight:900">Empati</div>
+                    <div class="mini" id="lockTextEmp">Empati algılanmadan süreç ilerlemez.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lockitem">
+                <div class="row" style="align-items:flex-start;gap:8px">
+                  <span id="lockDotDocs" class="lockdot"></span>
+                  <div>
+                    <div style="font-weight:900">Yazılı Bilgilendirme/Teyit</div>
+                    <div class="mini" id="lockTextDocs">Bu senaryoda SMS/Mail + teyit olmadan onaya geçme.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row quick" id="quickRow"></div>
+          <div class="mini">Not: Quick butonlar temsilci cümlesi üretir. STT olmasa da akışı test edersiniz.</div>
+
+          <div class="divider"></div>
+
+          <div class="chat" id="chat"></div>
+
+          <div class="controls">
+            <button class="primary" id="startBtn">▶️ Başlat</button>
+            <button id="talkBtn" disabled>🎙️ Konuşmayı Başlat</button>
+            <button id="stopBtn" disabled>⏹️ Durdur</button>
+          </div>
+
+          <div class="muted" style="margin-top:8px" id="flowHint">
+            Hedef akış: <b>Empati</b> → <b>Bilgi</b> → <b>Çözüm/İşlem</b> → <b>Prosedür</b> → <b>Onay/Kapanış</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="card-h">
+          <div style="font-weight:900">🧠 Koç & Puan</div>
+        </div>
+        <div class="card-b">
+          <div id="coach" class="pill tip">Başlat’a basınca müşteri konuşacak. Empati ile başla.</div>
+
+          <div class="divider"></div>
+
+          <div class="kpi">
+            <div class="pill">Empati<br><b id="pEmp">0</b></div>
+            <div class="pill">Bilgi/Çerçeve<br><b id="pInfo">0</b></div>
+            <div class="pill">Çözüm/Teklif<br><b id="pSol">0</b></div>
+            <div class="pill">Prosedür<br><b id="pPro">0</b></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="pill">
+            <div style="font-weight:900;margin-bottom:6px">Mini Quiz</div>
+            <div class="muted">“Görüşmeyi Bitir” ile açılır. 10 sorudan rastgele 3 soru seçer.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ MODAL -->
+  <div id="quizBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-h">
+        <div style="font-weight:900">📝 Mini Quiz</div>
+        <button id="closeQuiz">✕</button>
+      </div>
+      <div class="modal-b">
+        <div class="muted">Quiz puanı toplam skora eklenir (%70 çağrı + %30 quiz).</div>
+        <div id="quizArea"></div>
+        <div class="row" style="justify-content:flex-end;margin-top:10px">
+          <button id="gradeQuiz" class="primary">✅ Quiz’i Değerlendir</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="finalArea" style="display:none">
+          <div class="resultBox">
+            <div style="font-weight:900;margin-bottom:6px">Sonuç</div>
+            <div class="muted" id="finalSummary"></div>
+            <div class="divider"></div>
+            <div class="copy" id="reportText"></div>
+          </div>
+          <div class="row" style="justify-content:flex-end;margin-top:10px">
+            <button id="copyReport">📋 Sonucu Kopyala</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  // --- Elements
+  const chat = document.getElementById("chat");
+  const statusEl = document.getElementById("status");
+  const coachEl = document.getElementById("coach");
+  const compatEl = document.getElementById("compat");
+  const stageChip = document.getElementById("stageChip");
+  const scenarioChip = document.getElementById("scenarioChip");
+  const flowHint = document.getElementById("flowHint");
+
+  const lockDotEmp = document.getElementById("lockDotEmp");
+  const lockTextEmp = document.getElementById("lockTextEmp");
+  const lockDotDocs = document.getElementById("lockDotDocs");
+  const lockTextDocs = document.getElementById("lockTextDocs");
+
+  const personaEl = document.getElementById("persona");
+  const callTypeEl = document.getElementById("callType");
+  const talkEl = document.getElementById("talk");
+  const talkVal = document.getElementById("talkVal");
+  const agentNameEl = document.getElementById("agentName");
+
+  const startBtn = document.getElementById("startBtn");
+  const talkBtn  = document.getElementById("talkBtn");
+  const stopBtn  = document.getElementById("stopBtn");
+  const endBtn   = document.getElementById("endBtn");
+  const resetBtn = document.getElementById("resetBtn");
+
+  const quizBackdrop = document.getElementById("quizBackdrop");
+  const quizArea = document.getElementById("quizArea");
+  const closeQuiz = document.getElementById("closeQuiz");
+  const gradeQuiz = document.getElementById("gradeQuiz");
+  const finalArea = document.getElementById("finalArea");
+  const finalSummary = document.getElementById("finalSummary");
+  const reportText = document.getElementById("reportText");
+  const copyReport = document.getElementById("copyReport");
+
+  const pEmp = document.getElementById("pEmp");
+  const pInfo = document.getElementById("pInfo");
+  const pSol = document.getElementById("pSol");
+  const pPro = document.getElementById("pPro");
+
+  const quickRow = document.getElementById("quickRow");
+
+  talkEl.addEventListener("input", () => talkVal.textContent = talkEl.value);
+
+  // --- Helpers
+  function setCompat(ok, msg){
+    compatEl.textContent = msg;
+    compatEl.className = "badge " + (ok ? "ok" : "warn");
+  }
+  (function checkSupport(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const hasSR = !!SR;
+    const hasTTS = !!window.speechSynthesis;
+    if (hasSR && hasTTS) setCompat(true, "✅ STT/TTS hazır");
+    else if (!hasSR && hasTTS) setCompat(false, "⚠️ STT yok (Chrome/Edge)");
+    else if (hasSR && !hasTTS) setCompat(false, "⚠️ TTS yok");
+    else setCompat(false, "⚠️ STT/TTS yok");
+  })();
+
+  function addBubble(who, text){
+    const div = document.createElement("div");
+    div.className = "bub " + (who === "cust" ? "cust" : "agent");
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function speakTR(text){
+    try{
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "tr-TR";
+      window.speechSynthesis.speak(u);
+    }catch{}
+  }
+
+  function rand(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+  // --- Score
+  let score = { emp:0, info:0, sol:0, pro:0 };
+  function renderScore(){
+    pEmp.textContent = score.emp;
+    pInfo.textContent = score.info;
+    pSol.textContent = score.sol;
+    pPro.textContent = score.pro;
+  }
+  function bump(key, val){
+    score[key] = Math.min(100, score[key] + val);
+    renderScore();
+  }
+
+  // --- Persona logic (talkativity)
+  function talkativityLines(){
+    const v = Number(talkEl.value);
+    if (v <= 2) return 1;
+    if (v <= 5) return 2;
+    if (v <= 8) return 3;
+    return 4;
+  }
+  function personaTone(){ return personaEl.value; }
+
+  function buildReply(lines){
+    const tone = personaTone();
+    const n = talkativityLines();
+    const extras = {
+      calm: [
+        "Bunu yazılı olarak da görebilir miyim?",
+        "Bir sonraki faturamı nasıl etkiler?"
+      ],
+      talkative: [
+        "Bunun dayanağı nedir, nasıl hesaplanıyor?",
+        "Detay verir misiniz?",
+        "Aşamaları sırayla gidelim lütfen."
+      ],
+      angry: [
+        "Ben bunu kabul etmiyorum.",
+        "Net konuşun, beni oyalamayın.",
+        "Gerekirse şikayet kaydı açacağım."
+      ],
+      bargainer: [
+        "Daha iyi şart verirseniz onaylarım.",
+        "Son yetkiniz nedir?",
+        "Avantaj/indirim var mı?"
+      ]
+    };
+
+    let out = [];
+    for (let i=0;i<Math.min(n, lines.length);i++) out.push(lines[i]);
+    if (n >= 2) out.push(rand(extras[tone]));
+    if (n >= 4) out.push(rand(extras[tone]));
+    return out.slice(0,n).join(" ");
+  }
+
+  // --- Scenarios (Call Types)
+  const SCENARIOS = {
+    sktt_sales: {
+      title: "SKTT Satış (İkili Anlaşma)",
+      stageLabels: ["Empati", "SKTT Açıklama", "Teklif (12 ay sabit)", "SMS/Mail + Teyit", "OTP + Kapanış"],
+      gates: {
+        empathy: { required: true, label: "Empati", cues: /(anlıyorum|haklısınız|üzgünüm|kusura|rahatsız edici|sizi anlıyorum)/i },
+        docsConfirm: { required: true, label: "Yazılı bilgilendirme teyidi", cues: /(ulaştı|geldi|okudum|bilgilendirildim|teyit|onaylıyorum)/i }
+      },
+      cues: {
+        info: /(son kaynak|sktt|son kaynak tedarik tarifesi|serbest tüketici|limit|yüksek tüketim|dinamik|piyasa|ptf|yekdem|kbk)/i,
+        sol: /(ikili|anlaş|12 ay|sabit|aktif enerji|birim bedel|öngörü|kampanya|fiyat)/i,
+        pro: /(ek-?1|ek-?2|kvkk|sms|mail|e-?posta|bilgilendirme|fiyat karşılaştırma|teyit|otp|doğrulama kodu|6 haneli)/i
+      },
+      wrong: [
+        { re: /(sktt).*?(taahhüt|cayma|ceza)/i, msg: "Koç: SKTT’yi taahhüt/ceza gibi anlatma. SKTT = Son Kaynak Tedarik Tarifesi (piyasa bazlı/dinamik maliyet)." },
+        { re: /(hemen|bugün).*?(başlar|aktif olur)/i, msg: "Koç: Başlangıç tarihi süreç/aktivasyonla ilerler; 'hemen başlar' gibi kesin vaat verme." }
+      ],
+      quick: [
+        { key:"emp", label:"💬 Empati", text:"Sizi anlıyorum; bu durum rahatsız edici olabilir. Birlikte netleştirip çözüm sunacağım." },
+        { key:"sktt", label:"📌 SKTT Açıkla", text:"SKTT, Son Kaynak Tedarik Tarifesi kapsamıdır. Serbest tüketici olup belirli tüketim limitleri aşıldığında ve ikili anlaşma yoksa aktif enerji maliyeti piyasa koşullarına göre daha değişken yansıyabilir." },
+        { key:"offer", label:"🎯 Teklif", text:"Çözüm olarak ikili anlaşma sunabilirim: 12 ay boyunca aktif enerji birim bedelinizi sabitleyerek fiyat öngörülebilirliği sağlar." },
+        { key:"docs", label:"📩 SMS/Mail", text:"Şartları SMS ve e-posta ile ileteceğim (KVKK + Ek-1/Ek-2 bilgilendirme). Size ulaştığında bilgilendirildiğinizi teyit eder misiniz?" },
+        { key:"otp", label:"🔐 OTP", text:"Onay için 6 haneli doğrulama kodu (OTP) göndereceğim. Kodu paylaştığınızda işlemi tamamlayacağım." },
+        { key:"close", label:"✅ Kapanış", text:"Özetle; SKTT kapsamını açıkladım, 12 ay sabit aktif enerji teklifini sundum ve yazılı bilgilendirmeyi ilettim. Onay adımından sonra işlemi sonuçlandırıyorum. Başka yardımcı olabileceğim konu var mı?" }
+      ],
+      opens: {
+        calm: ["Merhaba. SKTT’ye geçtiğimi gördüm. Neden oldu ve çözümünüz var mı?"],
+        talkative: ["Merhaba. SKTT’ye geçmişim. Bu tam olarak nedir, neden oldum ve ikili anlaşma ile nasıl çıkabilirim?"],
+        angry: ["Merhaba! SKTT’ye almışsınız, faturam uçtu. Hemen açıklayın ve çözün!"],
+        bargainer: ["Merhaba. SKTT kapsamındayım. Eğer iyi bir ikili anlaşma teklifi varsa değerlendirebilirim."]
+      },
+      coachByStage: [
+        "Koç: Empati kilidini aç. (Kısa ama net empati cümlesi.)",
+        "Koç: SKTT’yi net tanımla: Son Kaynak Tedarik Tarifesi, limit/serbest tüketici, değişken maliyet çerçevesi.",
+        "Koç: Çözüm: 12 ay sabit aktif enerji birim bedeli (öngörü + stabilite).",
+        "Koç: Prosedür: SMS/Mail bilgilendirme (KVKK + Ekler) + ‘bilgilendirildim’ teyidi al.",
+        "Koç: OTP/Onay + kapanış: özetle, teşekkür et, ek ihtiyaç sor."
+      ],
+      quizPool: [
+        { id:"q1", q:"SKTT (elektrik) en doğru şekilde neyi ifade eder?", options:[
+          {k:"A", t:"Taahhüt cayma bedelidir", ok:false},
+          {k:"B", t:"Son Kaynak Tedarik Tarifesi kapsamıdır", ok:true},
+          {k:"C", t:"Dağıtım bedelidir", ok:false},
+          {k:"D", t:"Vergi kalemidir", ok:false}
+        ]},
+        { id:"q2", q:"SKTT’de maliyetin değişken olabilmesinin temel nedeni nedir?", options:[
+          {k:"A", t:"Aktif enerji maliyetinin piyasa koşullarına göre değişebilmesi", ok:true},
+          {k:"B", t:"Dağıtım bedelinin her gün değişmesi", ok:false},
+          {k:"C", t:"KDV’nin aylık değişmesi", ok:false},
+          {k:"D", t:"Sayaçların otomatik zam yapması", ok:false}
+        ]},
+        { id:"q3", q:"İkili anlaşmanın müşteriye temel faydası nedir?", options:[
+          {k:"A", t:"Aktif enerji birim bedelini süre boyunca sabitleyerek öngörü sağlar", ok:true},
+          {k:"B", t:"Tüm vergileri kaldırır", ok:false},
+          {k:"C", t:"Dağıtım bedelini sıfırlar", ok:false},
+          {k:"D", t:"Tüketimi otomatik düşürür", ok:false}
+        ]},
+        { id:"q4", q:"Prosedür açısından doğru adım hangisidir?", options:[
+          {k:"A", t:"Bilgilendirme göndermeden onay almak", ok:false},
+          {k:"B", t:"SMS/mail bilgilendirme + teyit sonrası onay istemek", ok:true},
+          {k:"C", t:"İtiraz olunca görüşmeyi kapatmak", ok:false},
+          {k:"D", t:"Yanlış bilgiyle ikna etmek", ok:false}
+        ]},
+        { id:"q5", q:"Müşteri tepkili olduğunda ilk yapılması gereken nedir?", options:[
+          {k:"A", t:"Empati kurup netleştirmek", ok:true},
+          {k:"B", t:"Hemen fiyat söylemek", ok:false},
+          {k:"C", t:"Konuyu değiştirmek", ok:false},
+          {k:"D", t:"Sessiz kalmak", ok:false}
+        ]},
+        { id:"q6", q:"Müşteri “SMS gelmedi” derse doğru aksiyon nedir?", options:[
+          {k:"A", t:"Tekrar gönderip teyit almak", ok:true},
+          {k:"B", t:"Onay isteyip devam etmek", ok:false},
+          {k:"C", t:"Görüşmeyi kapatmak", ok:false},
+          {k:"D", t:"İtirazı yok saymak", ok:false}
+        ]},
+        { id:"q7", q:"Yanlış bilgi örneği hangisidir?", options:[
+          {k:"A", t:"SKTT = Son Kaynak Tedarik Tarifesi", ok:false},
+          {k:"B", t:"SKTT = taahhüt cayma bedeli", ok:true},
+          {k:"C", t:"İkili anlaşma sabit fiyat içerebilir", ok:false},
+          {k:"D", t:"Bilgilendirme sonrası onay alınır", ok:false}
+        ]},
+        { id:"q8", q:"Kapanışta en doğru davranış nedir?", options:[
+          {k:"A", t:"Özet + teşekkür + ek ihtiyaç sorusu", ok:true},
+          {k:"B", t:"Bir anda kapatmak", ok:false},
+          {k:"C", t:"Yeni konu açmak", ok:false},
+          {k:"D", t:"Müşteriyi suçlamak", ok:false}
+        ]},
+        { id:"q9", q:"Onay (OTP) adımı için en doğru yaklaşım hangisidir?", options:[
+          {k:"A", t:"Kodu alıp işlemi tamamlamadan önce bilgilendirme teyidini almak", ok:true},
+          {k:"B", t:"Bilgilendirme olmadan kod istemek", ok:false},
+          {k:"C", t:"Kodu hiç istemeden onaylamak", ok:false},
+          {k:"D", t:"Kodu müşteriye söylemek", ok:false}
+        ]},
+        { id:"q10", q:"SKTT’den çıkış için en net çözüm hangisidir?", options:[
+          {k:"A", t:"İkili anlaşma/tedarikçi sözleşmesi ile tedariki yapılandırmak", ok:true},
+          {k:"B", t:"Hiçbir şey yapmadan otomatik çıkmak", ok:false},
+          {k:"C", t:"Vergi dilekçesi vermek", ok:false},
+          {k:"D", t:"Dağıtım şirketini değiştirmek", ok:false}
+        ]}
+      ]
+    },
+
+    sktt_info: {
+      title: "SKTT Bilgilendirme",
+      stageLabels: ["Empati", "SKTT Tanımı", "Hesap Mantığı", "Yönlendirme/Kapanış", "Kapanış"],
+      gates: {
+        empathy: { required: true, label: "Empati", cues: /(anlıyorum|haklısınız|üzgünüm|kusura|rahatsız edici|sizi anlıyorum)/i },
+        docsConfirm: { required: false, label: "Yazılı teyit", cues: /.^/ } // devre dışı
+      },
+      cues: {
+        info: /(sktt|son kaynak|serbest tüketici|limit|yüksek tüketim|dinamik|ptf|yekdem|kbk)/i,
+        sol: /(nasıl hesap|ptf|yekdem|kbk|piyasa|fatura)/i,
+        pro: /(dağıtım şirketi|nihai tüketim|fatura üzerinden|kayıt|şikayet)/i
+      },
+      wrong: [
+        { re: /(sktt).*?(taahhüt|cayma|ceza)/i, msg: "Koç: SKTT’yi taahhüt/ceza gibi anlatma. SKTT = Son Kaynak Tedarik Tarifesi." }
+      ],
+      quick: [
+        { key:"emp", label:"💬 Empati", text:"Sizi anlıyorum. Bu durum kafa karıştırıcı olabilir; birlikte netleştirelim." },
+        { key:"sktt", label:"📌 SKTT Tanımı", text:"SKTT, Son Kaynak Tedarik Tarifesi kapsamıdır. Serbest tüketici olup belirli tüketim limitleri aşıldığında ikili anlaşma yoksa aktif enerji maliyeti daha değişken yansıyabilir." },
+        { key:"calc", label:"🧾 Hesap Mantığı", text:"SKTT’de aktif enerji maliyeti dönemsel piyasa maliyetlerine göre değişebilir (örnek: PTF/YEKDEM gibi bileşenler). Bu yüzden aylara göre dalgalanma görülebilir." },
+        { key:"route", label:"📞 Yönlendirme", text:"Tüketiminizin nihai bilgisi ve sayaç okuma detayları için dağıtım şirketi ve fatura kalemleri üzerinden takip edebilirsiniz; ben de bilgilendirme kaydı açabilirim." },
+        { key:"close", label:"✅ Kapanış", text:"Özetle SKTT kapsamını ve maliyetin neden değişebildiğini anlattım. Başka sormak istediğiniz bir şey var mı?" }
+      ],
+      opens: {
+        calm: ["Merhaba. SKTT’ye geçtiğimi gördüm. Nedir bu?"],
+        talkative: ["Merhaba. SKTT ne demek? Neden ben SKTT’ye geçtim?"],
+        angry: ["Merhaba! SKTT’ye aldınız, faturam arttı. Bu ne?"],
+        bargainer: ["Merhaba. SKTT kapsamındayım. Önce bir net açıklama alayım."]
+      },
+      coachByStage: [
+        "Koç: Empati ile başla.",
+        "Koç: SKTT’yi net tanımla.",
+        "Koç: Değişken maliyet/hesap mantığını basit anlat.",
+        "Koç: Gerekirse dağıtım/nihai tüketim çerçevesi + kapanış.",
+        "Koç: Kapanış (özet + teşekkür)."
+      ],
+      quizPool: [
+        { id:"q1", q:"SKTT neyi ifade eder?", options:[
+          {k:"A", t:"Son Kaynak Tedarik Tarifesi", ok:true},
+          {k:"B", t:"Sabit Kampanya Tarifesi", ok:false},
+          {k:"C", t:"Sayaç Kesme Tahakkuk Tarifesi", ok:false},
+          {k:"D", t:"KDV türü", ok:false}
+        ]},
+        { id:"q2", q:"SKTT’de maliyet neden dalgalanabilir?", options:[
+          {k:"A", t:"Piyasa/tedarik maliyetleri değişebildiği için", ok:true},
+          {k:"B", t:"KDV her gün değiştiği için", ok:false},
+          {k:"C", t:"Dağıtım bedeli günlük değiştiği için", ok:false},
+          {k:"D", t:"Sayaç türü yüzünden", ok:false}
+        ]},
+        // 8 tane daha kısa soru (basit)
+        { id:"q3", q:"SKTT yanlış anlatım örneği hangisi?", options:[
+          {k:"A", t:"SKTT = taahhüt cayma bedeli", ok:true},
+          {k:"B", t:"SKTT = Son Kaynak Tedarik Tarifesi", ok:false},
+          {k:"C", t:"SKTT’de maliyet değişebilir", ok:false},
+          {k:"D", t:"Bilgilendirme yapılır", ok:false}
+        ]},
+        { id:"q4", q:"Müşteri tepkiliyse ilk adım?", options:[
+          {k:"A", t:"Empati kurmak", ok:true},
+          {k:"B", t:"Konuyu kapatmak", ok:false},
+          {k:"C", t:"Konuyu değiştirmek", ok:false},
+          {k:"D", t:"Sessiz kalmak", ok:false}
+        ]},
+        { id:"q5", q:"SKTT’de ‘değişken’ neyi anlatır?", options:[
+          {k:"A", t:"Aktif enerji maliyetinin dönemsel değişebilmesini", ok:true},
+          {k:"B", t:"Dağıtım bedelinin sıfır olmasını", ok:false},
+          {k:"C", t:"Vergilerin kalkmasını", ok:false},
+          {k:"D", t:"Sözleşmenin otomatik yenilenmesini", ok:false}
+        ]},
+        { id:"q6", q:"Kapanışta doğru davranış?", options:[
+          {k:"A", t:"Özet + teşekkür", ok:true},
+          {k:"B", t:"Bir anda kapat", ok:false},
+          {k:"C", t:"Müşteriyi suçla", ok:false},
+          {k:"D", t:"Yeni konu aç", ok:false}
+        ]},
+        { id:"q7", q:"SKTT tanımı hangi kalemle ilgilidir?", options:[
+          {k:"A", t:"Tedarik/Aktif enerji", ok:true},
+          {k:"B", t:"Sadece dağıtım", ok:false},
+          {k:"C", t:"Sadece vergi", ok:false},
+          {k:"D", t:"Sadece sayaç", ok:false}
+        ]},
+        { id:"q8", q:"Müşteri tüketimini nereden takip eder?", options:[
+          {k:"A", t:"Fatura/okuma bilgileri üzerinden", ok:true},
+          {k:"B", t:"Sadece SMS ile", ok:false},
+          {k:"C", t:"Sadece çağrı merkezi", ok:false},
+          {k:"D", t:"Takip edemez", ok:false}
+        ]},
+        { id:"q9", q:"Bilgilendirme amacı nedir?", options:[
+          {k:"A", t:"Müşterinin konuyu net anlaması", ok:true},
+          {k:"B", t:"Müşteriyi susturmak", ok:false},
+          {k:"C", t:"Faturayı iptal etmek", ok:false},
+          {k:"D", t:"Vergi kaldırmak", ok:false}
+        ]},
+        { id:"q10", q:"Empati cümlesi örneği hangisi?", options:[
+          {k:"A", t:"Sizi anlıyorum, birlikte netleştirelim.", ok:true},
+          {k:"B", t:"Beni ilgilendirmez.", ok:false},
+          {k:"C", t:"Kapatıyorum.", ok:false},
+          {k:"D", t:"Siz yanlış yapmışsınız.", ok:false}
+        ]}
+      ]
+    },
+
+    tariff_info: {
+      title: "Kademeli/Ulusal Tarife Bilgi",
+      stageLabels: ["Empati", "Tarife Tanımı", "Kademe Mantığı", "Özet/Kapanış", "Kapanış"],
+      gates: {
+        empathy: { required: true, label: "Empati", cues: /(anlıyorum|haklısınız|üzgünüm|kusura|sizi anlıyorum)/i },
+        docsConfirm: { required: false, label: "Yazılı teyit", cues: /.^/ }
+      },
+      cues: {
+        info: /(ulusal|tarife|kademeli|düşük kademe|yüksek kademe|epdk)/i,
+        sol: /(8\s*kwh|30\s*kwh|günlük|ortalama|kademe|limit)/i,
+        pro: /(fatura|kalem|kwh|okuma)/i
+      },
+      wrong: [
+        { re: /(3\s*zamanlı).*?(kademe uygulanır)/i, msg: "Koç: 3 zamanlı tarifede kademe uygulanmaz gibi kesin konuşma; net çerçeve ver ve kalemleri açıklamaya odaklan." }
+      ],
+      quick: [
+        { key:"emp", label:"💬 Empati", text:"Anlıyorum; tarife yapıları kafa karıştırabiliyor. Basitçe açıklayayım." },
+        { key:"def", label:"📌 Tanım", text:"Ulusal tarife EPDK tarafından dönemsel belirlenen bir çerçevedir. Kademeli tarife ise tüketim belirli sınırları aşınca birim bedelin kademeye göre değişmesidir." },
+        { key:"kwh", label:"⚡ Kademe", text:"Kademe mantığı günlük ortalama tüketim üzerinden hesaplanabilir. Örnek: meskende günlük 8 kWh eşik gibi yaklaşım kullanılır." },
+        { key:"bill", label:"🧾 Fatura", text:"Faturada tüketim (kWh) ve birim bedel/kademe ayrımı görülür. İsterseniz kalem kalem üzerinden gidelim." },
+        { key:"close", label:"✅ Kapanış", text:"Özetle ulusal/kademeli tarife mantığını anlattım. Başka sormak istediğiniz bir şey var mı?" }
+      ],
+      opens: {
+        calm: ["Merhaba, kademeli tarife ne demek?"],
+        talkative: ["Merhaba, kademeli tarife nasıl hesaplanıyor, neden yüksek kademeye geçtim?"],
+        angry: ["Merhaba! Kademeye girdim diye faturam arttı. Nedir bu?"],
+        bargainer: ["Merhaba, tarifemi daha avantajlı hale getirebilir miyiz?"]
+      },
+      coachByStage: [
+        "Koç: Empati.",
+        "Koç: Ulusal/kademeli tarife tanımı.",
+        "Koç: Kademe mantığı: tüketim eşikleri + örnek anlatım.",
+        "Koç: Özet + gerekirse faturadan kalem kalem yönlendirme.",
+        "Koç: Kapanış."
+      ],
+      quizPool: [
+        { id:"q1", q:"Kademeli tarife neyi ifade eder?", options:[
+          {k:"A", t:"Tüketim eşiğine göre birim bedelin değişmesi", ok:true},
+          {k:"B", t:"Vergilerin kaldırılması", ok:false},
+          {k:"C", t:"Dağıtım bedelinin iptali", ok:false},
+          {k:"D", t:"Sayaç türü", ok:false}
+        ]},
+        // (toplam 10)
+        { id:"q2", q:"Ulusal tarife çerçevesi kim tarafından belirlenir?", options:[
+          {k:"A", t:"EPDK gibi düzenleyici otorite", ok:true},
+          {k:"B", t:"Sadece müşteri", ok:false},
+          {k:"C", t:"Sadece dağıtım şirketi", ok:false},
+          {k:"D", t:"Banka", ok:false}
+        ]},
+        { id:"q3", q:"Müşteri tepkiliyse ilk adım?", options:[
+          {k:"A", t:"Empati kurmak", ok:true},
+          {k:"B", t:"Kapatmak", ok:false},
+          {k:"C", t:"Azarlamak", ok:false},
+          {k:"D", t:"Konuyu değiştirmek", ok:false}
+        ]},
+        { id:"q4", q:"Kademe hesabı hangi veriye dayanır?", options:[
+          {k:"A", t:"Tüketim (kWh)", ok:true},
+          {k:"B", t:"Telefon modeli", ok:false},
+          {k:"C", t:"E-posta", ok:false},
+          {k:"D", t:"Adres kodu", ok:false}
+        ]},
+        { id:"q5", q:"Faturada kademe etkisi nerede görülür?", options:[
+          {k:"A", t:"Birim bedel/tutar kalemlerinde", ok:true},
+          {k:"B", t:"Sadece sayaç seri numarasında", ok:false},
+          {k:"C", t:"Bankada", ok:false},
+          {k:"D", t:"Hiçbir yerde", ok:false}
+        ]},
+        { id:"q6", q:"Doğru kapanış hangisi?", options:[
+          {k:"A", t:"Özet + teşekkür + ek soru", ok:true},
+          {k:"B", t:"Bir anda kapat", ok:false},
+          {k:"C", t:"Müşteriyi suçla", ok:false},
+          {k:"D", t:"Yeni konu aç", ok:false}
+        ]},
+        { id:"q7", q:"Kademeli tarifede amaç nedir?", options:[
+          {k:"A", t:"Tüketimi eşiklere göre farklı fiyatlandırmak", ok:true},
+          {k:"B", t:"Vergi kaldırmak", ok:false},
+          {k:"C", t:"Dağıtımı kapatmak", ok:false},
+          {k:"D", t:"Sayaç değiştirmek", ok:false}
+        ]},
+        { id:"q8", q:"Temsilci ne yapmalı?", options:[
+          {k:"A", t:"Basitçe çerçeve verip kalemleri açıklamalı", ok:true},
+          {k:"B", t:"Konuyu gizlemeli", ok:false},
+          {k:"C", t:"Sertleşmeli", ok:false},
+          {k:"D", t:"Yanlış bilgi vermeli", ok:false}
+        ]},
+        { id:"q9", q:"Tarife bilgisi verirken nelere dikkat edilir?", options:[
+          {k:"A", t:"Net tanım + örnek + fatura kalemleri", ok:true},
+          {k:"B", t:"Uzun uzun konu dışı", ok:false},
+          {k:"C", t:"Sadece fiyat söylemek", ok:false},
+          {k:"D", t:"Sessiz kalmak", ok:false}
+        ]},
+        { id:"q10", q:"Empati cümlesi örneği?", options:[
+          {k:"A", t:"Anlıyorum, birlikte netleştirelim.", ok:true},
+          {k:"B", t:"Beni ilgilendirmez.", ok:false},
+          {k:"C", t:"Kapatıyorum.", ok:false},
+          {k:"D", t:"Siz hata yapmışsınız.", ok:false}
+        ]}
+      ]
+    },
+
+    iys_kvkk: {
+      title: "İYS/KVKK İzin",
+      stageLabels: ["Empati", "İYS/KVKK Açıklama", "İzin Seçenekleri", "Onay/Ret + Kapanış", "Kapanış"],
+      gates: {
+        empathy: { required: true, label: "Empati", cues: /(anlıyorum|haklısınız|üzgünüm|kusura|sizi anlıyorum)/i },
+        docsConfirm: { required: true, label: "Açık rıza/izin", cues: /(kabul|onaylıyorum|izin veriyorum|açık rıza)/i }
+      },
+      cues: {
+        info: /(iys|ileti yönetim|ticari elektronik ileti|kvkk|açık rıza|veri işleme)/i,
+        sol: /(sms|mail|arama|kanal|izin|ret)/i,
+        pro: /(onay|kabul|ret|iptal|teyit)/i
+      },
+      wrong: [
+        { re: /(izin).*?(gereksiz|önemsiz|boşver)/i, msg: "Koç: İYS/KVKK’yı küçümseme. Şeffaf ve net bilgilendir." }
+      ],
+      quick: [
+        { key:"emp", label:"💬 Empati", text:"Anlıyorum; izin ve KVKK metinleri karmaşık gelebilir. Kısa ve net anlatayım." },
+        { key:"info", label:"📌 İYS/KVKK", text:"İYS, ticari elektronik ileti izinlerinin yönetildiği sistemdir. KVKK kapsamında verilerin işlenmesi için açık rıza ve bilgilendirme yapılır." },
+        { key:"opts", label:"📲 Kanallar", text:"İsterseniz SMS, e-posta ve arama kanallarını ayrı ayrı tercih edebilirsiniz. İstediğiniz zaman ret/iptal hakkınız da vardır." },
+        { key:"consent", label:"✅ Açık Rıza", text:"Devam edebilmem için ‘verilerimin işlenmesine ve ileti iznine’ onay verdiğinizi teyit eder misiniz?" },
+        { key:"close", label:"✅ Kapanış", text:"Özetle İYS/KVKK çerçevesini ve izin seçeneklerini paylaştım. Başka yardımcı olabileceğim konu var mı?" }
+      ],
+      opens: {
+        calm: ["Merhaba. Neden ileti izni soruyorsunuz?"],
+        talkative: ["Merhaba. İYS nedir, KVKK açısından benden ne onayı alıyorsunuz?"],
+        angry: ["Merhaba! Sürekli izin diyorsunuz, neden?"],
+        bargainer: ["Merhaba. İzin versem bana ne avantaj var?"]
+      },
+      coachByStage: [
+        "Koç: Empati.",
+        "Koç: İYS ve KVKK’yı şeffaf biçimde açıkla.",
+        "Koç: Kanal bazlı izin seçeneklerini sun.",
+        "Koç: Onay/ret durumunu yönet + kapanış.",
+        "Koç: Kapanış."
+      ],
+      quizPool: [
+        { id:"q1", q:"İYS neyle ilgilidir?", options:[
+          {k:"A", t:"Ticari elektronik ileti izinlerinin yönetimi", ok:true},
+          {k:"B", t:"Elektrik sayacı", ok:false},
+          {k:"C", t:"Dağıtım bedeli", ok:false},
+          {k:"D", t:"Vergi türü", ok:false}
+        ]},
+        { id:"q2", q:"KVKK kapsamında ne önemlidir?", options:[
+          {k:"A", t:"Bilgilendirme ve açık rıza", ok:true},
+          {k:"B", t:"Müşteriyi zorlamak", ok:false},
+          {k:"C", t:"Gizlemek", ok:false},
+          {k:"D", t:"İzin almamak", ok:false}
+        ]},
+        { id:"q3", q:"İzinler nasıl verilebilir?", options:[
+          {k:"A", t:"Kanal bazlı (SMS/mail/arama) tercih edilebilir", ok:true},
+          {k:"B", t:"Sadece SMS", ok:false},
+          {k:"C", t:"Sadece arama", ok:false},
+          {k:"D", t:"Hiç verilemez", ok:false}
+        ]},
+        { id:"q4", q:"Müşteri ret ederse ne yapılır?", options:[
+          {k:"A", t:"Kararı saygıyla alıp süreci kapatmak", ok:true},
+          {k:"B", t:"Zorlamak", ok:false},
+          {k:"C", t:"Azarlamak", ok:false},
+          {k:"D", t:"Yanlış bilgi vermek", ok:false}
+        ]},
+        { id:"q5", q:"Empati cümlesi örneği?", options:[
+          {k:"A", t:"Anlıyorum, netleştirelim.", ok:true},
+          {k:"B", t:"Beni ilgilendirmez.", ok:false},
+          {k:"C", t:"Kapatıyorum.", ok:false},
+          {k:"D", t:"Siz anlamıyorsunuz.", ok:false}
+        ]},
+        { id:"q6", q:"Doğru kapanış hangisi?", options:[
+          {k:"A", t:"Özet + teşekkür + ek ihtiyaç sorusu", ok:true},
+          {k:"B", t:"Bir anda kapatmak", ok:false},
+          {k:"C", t:"Müşteriyi suçlamak", ok:false},
+          {k:"D", t:"Konuyu uzatmak", ok:false}
+        ]},
+        { id:"q7", q:"Açık rıza ne demektir?", options:[
+          {k:"A", t:"Bilgilendirilmiş şekilde onay vermek", ok:true},
+          {k:"B", t:"Zorla onay", ok:false},
+          {k:"C", t:"Sessiz kalmak", ok:false},
+          {k:"D", t:"Onaysız işlem", ok:false}
+        ]},
+        { id:"q8", q:"İYS/KVKK anlatımında doğru yaklaşım?", options:[
+          {k:"A", t:"Şeffaf ve net açıklama", ok:true},
+          {k:"B", t:"Gizlemek", ok:false},
+          {k:"C", t:"Küçümsemek", ok:false},
+          {k:"D", t:"Korkutmak", ok:false}
+        ]},
+        { id:"q9", q:"Müşteri izinleri sonradan değiştirebilir mi?", options:[
+          {k:"A", t:"Evet, ret/iptal hakkı vardır", ok:true},
+          {k:"B", t:"Hayır, sonsuza kadar kalır", ok:false},
+          {k:"C", t:"Sadece bankadan", ok:false},
+          {k:"D", t:"Sadece yazıyla", ok:false}
+        ]},
+        { id:"q10", q:"Prosedürde kritik adım nedir?", options:[
+          {k:"A", t:"Onayı teyit etmek", ok:true},
+          {k:"B", t:"Onaysız ilerlemek", ok:false},
+          {k:"C", t:"Konuyu kapatmak", ok:false},
+          {k:"D", t:"Yanlış bilgi vermek", ok:false}
+        ]}
+      ]
+    }
+  };
+
+  function getScenario(){
+    return SCENARIOS[callTypeEl.value] || SCENARIOS.sktt_sales;
+  }
+
+  function renderScenarioUI(){
+    const sc = getScenario();
+    scenarioChip.textContent = "Senaryo: " + sc.title;
+
+    // Flow hint
+    flowHint.innerHTML = `Hedef akış: <b>${sc.stageLabels[0]}</b> → <b>${sc.stageLabels[1]}</b> → <b>${sc.stageLabels[2]}</b> → <b>${sc.stageLabels[3]}</b> → <b>${sc.stageLabels[4]}</b>`;
+
+    // Lock texts
+    lockTextEmp.textContent = sc.gates.empathy.required
+      ? "Empati algılanmadan süreç ilerlemez."
+      : "Empati önerilir.";
+
+    lockTextDocs.textContent = sc.gates.docsConfirm.required
+      ? "Bu senaryoda onaya geçmeden önce yazılı bilgilendirme/onay teyidi gerekir."
+      : "Bu senaryoda yazılı teyit zorunlu değil.";
+
+    // Quick buttons
+    quickRow.innerHTML = "";
+    sc.quick.forEach(q => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.quick = q.key;
+      b.textContent = q.label;
+      b.addEventListener("click", () => {
+        if (talkBtn.disabled) return;
+        addBubble("agent", q.text);
+        const reply = customerReply(q.text);
+        setTimeout(() => { addBubble("cust", reply); speakTR(reply); }, 200);
+      });
+      quickRow.appendChild(b);
+    });
+  }
+
+  callTypeEl.addEventListener("change", () => {
+    renderScenarioUI();
+    resetAll(); // senaryo değişince temiz başlasın
+  });
+
+  // --- Stage & Gates
+  let stage = 0;           // 0..4
+  let mistakes = 0;
+  let lastReply = "";
+
+  let gateEmpathy = false;
+  let gateDocsConfirm = false;
+
+  function setStage(n){
+    stage = n;
+    const shown = Math.min(4, stage);
+    stageChip.textContent = `Aşama: ${shown}/4`;
+  }
+
+  function setGateVisual(dotEl, ok){
+    if (ok) dotEl.classList.add("ok");
+    else dotEl.classList.remove("ok");
+  }
+
+  function avoidRepeat(text){
+    if (text === lastReply) text = text + " (Lütfen net ilerleyelim.)";
+    lastReply = text;
+    return text;
+  }
+
+  function evaluateGates(agentText){
+    const sc = getScenario();
+    const t = (agentText || "").toLowerCase();
+
+    if (sc.gates.empathy.cues.test(t)) gateEmpathy = true;
+    if (sc.gates.docsConfirm.cues.test(t)) gateDocsConfirm = true;
+
+    setGateVisual(lockDotEmp, gateEmpathy || !sc.gates.empathy.required);
+    setGateVisual(lockDotDocs, gateDocsConfirm || !sc.gates.docsConfirm.required);
+  }
+
+  function scoreFromCues(agentText){
+    const sc = getScenario();
+    const t = (agentText || "").toLowerCase();
+
+    if (sc.gates.empathy.cues.test(t)) bump("emp", 25);
+    if (sc.cues.info.test(t)) bump("info", 25);
+    if (sc.cues.sol.test(t)) bump("sol", 25);
+    if (sc.cues.pro.test(t)) bump("pro", 25);
+  }
+
+  function applyWrongChecks(agentText){
+    const sc = getScenario();
+    const t = (agentText || "").toLowerCase();
+
+    for (const w of sc.wrong){
+      if (w.re.test(t)){
+        mistakes++;
+        coachEl.textContent = w.msg;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function customerReply(agentText){
+    const sc = getScenario();
+    const t = (agentText || "").toLowerCase().trim();
+
+    const tooShort = t.length < 10;
+    const irrelevant = /(başka sorunuz var mı|başka bir şey|tamamdır|peki|hmm|dinledim|anladım)/i.test(t);
+
+    // Evaluate & Score
+    evaluateGates(agentText);
+    scoreFromCues(agentText);
+
+    // Wrong info handling
+    if (applyWrongChecks(agentText)){
+      return avoidRepeat(buildReply([
+        "Bu söylediğiniz bana doğru gelmedi.",
+        "Lütfen konuyu doğru çerçevede anlatın.",
+        "Net bir açıklama istiyorum."
+      ]));
+    }
+
+    // Too short / irrelevant
+    if (tooShort || irrelevant){
+      mistakes++;
+      coachEl.textContent = "Koç: Kısa/alakasız cevap. Empati + net çerçeve + bir sonraki adımı söyle.";
+      return avoidRepeat(buildReply([
+        "Bu cevap yeterli değil.",
+        "Lütfen net anlatın ve çözüm önerin.",
+        "Adım adım gidelim."
+      ]));
+    }
+
+    // Stage engine (always 0..4; senaryonun bazı kilitleri zorunlu olmayabilir)
+    // Stage 0: Empati
+    if (stage === 0){
+      if (sc.gates.empathy.required && !gateEmpathy){
+        mistakes++;
+        coachEl.textContent = sc.coachByStage[0];
+        return avoidRepeat(buildReply([
+          "Beni anladığınızı hissetmiyorum.",
+          "Önce empati kurar mısınız?",
+          "Sonra konuya geçelim."
+        ]));
+      }
+      setStage(1); mistakes = 0;
+      coachEl.textContent = sc.coachByStage[1];
+      return avoidRepeat(buildReply([
+        "Tamam, teşekkür ederim.",
+        `Şimdi ${sc.stageLabels[1]} kısmını net anlatır mısınız?`,
+        "Detay rica ediyorum."
+      ]));
+    }
+
+    // Stage 1: Bilgi/Çerçeve
+    if (stage === 1){
+      if (!sc.cues.info.test(t)){
+        mistakes++;
+        coachEl.textContent = "Koç: Bilgi/çerçeve eksik. Tanımı ve ‘neden’ kısmını söyle.";
+        return avoidRepeat(buildReply([
+          "Hâlâ net değil.",
+          "Lütfen tanımını ve nedenini anlatın."
+        ]));
+      }
+      setStage(2); mistakes = 0;
+      coachEl.textContent = sc.coachByStage[2];
+      return avoidRepeat(buildReply([
+        "Peki çözüm ne?",
+        `Şimdi ${sc.stageLabels[2]} kısmına geçebilir miyiz?`,
+        "Ne öneriyorsunuz?"
+      ]));
+    }
+
+    // Stage 2: Çözüm/Teklif
+    if (stage === 2){
+      if (!sc.cues.sol.test(t)){
+        mistakes++;
+        coachEl.textContent = "Koç: Çözüm/teklif eksik. Müşteriye net bir yol sun.";
+        return avoidRepeat(buildReply([
+          "Net bir çözüm duymadım.",
+          "Bana seçenek sunar mısınız?"
+        ]));
+      }
+      setStage(3); mistakes = 0;
+      coachEl.textContent = sc.coachByStage[3];
+      return avoidRepeat(buildReply([
+        "Şartları yazılı görmek istiyorum.",
+        "SMS/mail ile iletir misiniz?",
+        "Sonra nasıl onaylayacağım?"
+      ]));
+    }
+
+    // Stage 3: Prosedür + (senaryoya göre) docsConfirm gate
+    if (stage === 3){
+      // Prosedür cues yoksa geri döndür
+      if (!sc.cues.pro.test(t)){
+        mistakes++;
+        coachEl.textContent = "Koç: Prosedür eksik. Yazılı bilgilendirme/teyit/onay adımlarını söyle.";
+        return avoidRepeat(buildReply([
+          "Prosedürü net duymadım.",
+          "Yazılı bilgilendirme ve onay adımı nasıl olacak?"
+        ]));
+      }
+
+      // Docs confirm required?
+      if (sc.gates.docsConfirm.required && !gateDocsConfirm){
+        mistakes++;
+        coachEl.textContent = "Koç: Bu senaryoda ‘bilgilendirme ulaştı mı / teyit eder misiniz?’ kilidi açılmadan onaya geçme.";
+        return avoidRepeat(buildReply([
+          "SMS/mail gelmeden onay veremem.",
+          "Lütfen önce yazılı bilgilendirmeyi gönderin ve teyidimi alın."
+        ]));
+      }
+
+      setStage(4); mistakes = 0;
+      coachEl.textContent = sc.coachByStage[4];
+      return avoidRepeat(buildReply([
+        "Tamam, ilerleyebiliriz.",
+        "Onay adımı nedir?",
+        "İşlemi tamamlayalım."
+      ]));
+    }
+
+    // Stage 4: Kapanış
+    coachEl.textContent = sc.coachByStage[4];
+    return avoidRepeat(buildReply([
+      "Teşekkürler.",
+      "Başka bir şey yoksa kapatalım."
+    ]));
+  }
+
+  // --- Speech Recognition
+  let recognition = null;
+  let listening = false;
+
+  function setupRecognition(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR){
+      alert("Bu tarayıcı STT desteklemiyor. Chrome/Edge deneyin.");
+      return null;
+    }
+    const r = new SR();
+    r.lang = "tr-TR";
+    r.interimResults = false;
+    r.continuous = false;
+
+    r.onstart = () => { listening=true; statusEl.textContent="Durum: dinleniyor…"; };
+    r.onend   = () => { listening=false; statusEl.textContent="Durum: beklemede"; };
+    r.onerror = (e) => { statusEl.textContent="Hata: " + (e?.error || "bilinmiyor"); };
+
+    r.onresult = (e) => {
+      const text = e.results?.[0]?.[0]?.transcript || "";
+      if (!text) return;
+      addBubble("agent", text);
+      const reply = customerReply(text);
+      setTimeout(() => { addBubble("cust", reply); speakTR(reply); }, 220);
+    };
+    return r;
+  }
+
+  // --- Quiz helpers
+  function pickRandomQuestions(pool, n=3){
+    const a = [...pool];
+    for (let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a.slice(0,n);
+  }
+  let currentQuiz = [];
+  let lastQuizScore = 0;
+
+  function openQuiz(){
+    const sc = getScenario();
+    currentQuiz = pickRandomQuestions(sc.quizPool, 3);
+
+    quizArea.innerHTML = "";
+    finalArea.style.display = "none";
+
+    currentQuiz.forEach((qq, idx) => {
+      const div = document.createElement("div");
+      div.className = "q";
+      div.innerHTML = `<h4>${idx+1}) ${qq.q}</h4>`;
+      qq.options.forEach(opt => {
+        const line = document.createElement("label");
+        line.className = "opt";
+        line.innerHTML = `<input type="radio" name="${qq.id}" value="${opt.k}" /> <span><b>${opt.k})</b> ${opt.t}</span>`;
+        div.appendChild(line);
+      });
+      quizArea.appendChild(div);
+    });
+
+    quizBackdrop.style.display = "flex";
+  }
+
+  function closeQuizModal(){ quizBackdrop.style.display = "none"; }
+  closeQuiz.onclick = closeQuizModal;
+  quizBackdrop.addEventListener("click", (e) => { if (e.target === quizBackdrop) closeQuizModal(); });
+
+  gradeQuiz.onclick = () => {
+    let correct = 0;
+    const total = currentQuiz.length;
+
+    currentQuiz.forEach(qq => {
+      const picked = document.querySelector(`input[name="${qq.id}"]:checked`)?.value || "";
+      const ok = qq.options.find(o => o.ok)?.k;
+      if (picked && picked === ok) correct++;
+    });
+
+    const quizScore = Math.round((correct / total) * 100);
+    lastQuizScore = quizScore;
+
+    const callScore = Math.round((score.emp + score.info + score.sol + score.pro) / 4);
+    const totalScore = Math.round(callScore * 0.7 + quizScore * 0.3);
+
+    const name = (agentNameEl.value || "").trim() || "—";
+    const toneMap = {calm:"Sakin", talkative:"Konuşkan", angry:"Öfkeli", bargainer:"Pazarlıkçı"};
+    const sc = getScenario();
+
+    finalSummary.textContent = `Çağrı: ${callScore}/100 · Quiz: ${quizScore}/100 · Toplam: ${totalScore}/100`;
+
+    const report =
+`ROLE PLAY RAPORU
+Asistan: ${name}
+Senaryo: ${sc.title}
+Müşteri Profili: ${toneMap[personaTone()]} (konuşkanlık ${talkEl.value}/10)
+
+Kilitler
+- Empati: ${gateEmpathy || !sc.gates.empathy.required ? "TAMAM" : "EKSİK"}
+- Yazılı teyit/Onay: ${gateDocsConfirm || !sc.gates.docsConfirm.required ? "TAMAM" : "EKSİK"}
+
+KPI
+- Empati: ${score.emp}
+- Bilgi/Çerçeve: ${score.info}
+- Çözüm/Teklif: ${score.sol}
+- Prosedür: ${score.pro}
+
+Skorlar
+- Çağrı: ${callScore}/100
+- Quiz: ${quizScore}/100 (${correct}/${total})
+- TOPLAM: ${totalScore}/100`;
+
+    reportText.textContent = report;
+    finalArea.style.display = "block";
+  };
+
+  copyReport.onclick = async () => {
+    try{
+      await navigator.clipboard.writeText(reportText.textContent);
+      copyReport.textContent = "✅ Kopyalandı";
+      setTimeout(()=>copyReport.textContent="📋 Sonucu Kopyala", 1200);
+    }catch{
+      alert("Kopyalama başarısız. Tarayıcı izinlerini kontrol edin.");
+    }
+  };
+
+  // --- Reset & Start
+  function resetAll(){
+    chat.innerHTML = "";
+    score = { emp:0, info:0, sol:0, pro:0 };
+    renderScore();
+
+    setStage(0);
+    mistakes = 0;
+    lastReply = "";
+
+    gateEmpathy = false;
+    gateDocsConfirm = false;
+
+    const sc = getScenario();
+    setGateVisual(lockDotEmp, !sc.gates.empathy.required);
+    setGateVisual(lockDotDocs, !sc.gates.docsConfirm.required);
+
+    coachEl.textContent = "Başlat’a basınca müşteri konuşacak. Empati ile başla.";
+    statusEl.textContent = "Durum: beklemede";
+    talkBtn.disabled = true;
+    stopBtn.disabled = true;
+
+    try{ window.speechSynthesis.cancel(); }catch{}
+    if (recognition && listening) recognition.stop();
+  }
+
+  resetBtn.onclick = resetAll;
+  endBtn.onclick = openQuiz;
+
+  startBtn.onclick = () => {
+    if (!recognition) recognition = setupRecognition();
+    if (!recognition) return;
+
+    resetAll();
+
+    const sc = getScenario();
+    const opening = rand(sc.opens[personaTone()] || sc.opens.talkative);
+    addBubble("cust", opening);
+    speakTR(opening);
+
+    coachEl.textContent = sc.coachByStage[0];
+    statusEl.textContent = "Durum: hazır";
+    talkBtn.disabled = false;
+    stopBtn.disabled = false;
+  };
+
+  talkBtn.onclick = () => {
+    if (!recognition) return;
+    if (!listening) recognition.start();
+  };
+
+  stopBtn.onclick = () => {
+    try{ window.speechSynthesis.cancel(); }catch{}
+    if (recognition && listening) recognition.stop();
+  };
+
+  // Init
+  renderScenarioUI();
+  renderScore();
+  setStage(0);
+  resetAll();
+});
+</script>
+
+</body>
+</html>
