@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Call Center AI Simulator Pro</title>
+    <title>AI Mentor & Roleplay Agent</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,148 +11,260 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; touch-action: manipulation; }
-        .active-mic { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .chat-scroll::-webkit-scrollbar { width: 0px; }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Poppins:wght@400;600;800&display=swap');
+        
+        body { background: linear-gradient(135deg, #1a202c, #000000); font-family: 'Poppins', sans-serif; overflow: hidden; }
+        .neon-glow { box-shadow: 0 0 15px rgba(124, 58, 237, 0.6), inset 0 0 8px rgba(124, 58, 237, 0.3); }
+        .ai-text { font-family: 'Roboto Mono', monospace; }
+        
+        /* Mikrofon Animasyonu */
+        .mic-active { animation: pulse-mic 1.2s infinite ease-out; background-color: #ef4444 !important; }
+        @keyframes pulse-mic {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Dalga Efekti */
+        .wave-bar { background-color: #c084fc; width: 4px; border-radius: 2px; transform-origin: bottom; animation: wave 1.2s ease-in-out infinite; }
+        @keyframes wave {
+            0%, 100% { height: 10px; opacity: 0.6; }
+            50% { height: 40px; opacity: 1; }
+        }
     </style>
 </head>
-<body class="flex justify-center items-center min-h-screen font-sans text-white">
+<body class="flex justify-center items-center min-h-screen">
 
-    <div class="max-w-md w-full bg-slate-800 rounded-[2.5rem] border-[6px] border-slate-700 shadow-2xl overflow-hidden flex flex-col h-[90vh] relative">
+    <div class="max-w-md w-full h-[95vh] bg-slate-900/95 backdrop-blur-xl rounded-[3rem] border border-gray-800 shadow-[0_0_60px_rgba(0,0,0,0.7)] flex flex-col relative overflow-hidden">
         
-        <div class="p-6 bg-slate-700/50 border-b border-slate-600 flex justify-between items-center">
-            <div>
-                <h1 class="text-lg font-bold">Asistan Pro 2.0</h1>
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <p id="call-status" class="text-[10px] text-green-400 font-mono">CANLI SİMÜLASYON</p>
+        <div class="p-8 pb-4 border-b border-gray-800">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="ai-text text-violet-400 text-sm tracking-[0.2em] font-bold">ALPHA MENTOR AI</h2>
+                    <p class="text-3xl font-extrabold text-white mt-1">Simülasyon <span class="text-violet-500">Çalışıyor</span></p>
+                </div>
+                <div class="bg-gray-800 p-3 rounded-2xl border border-gray-700 text-center min-w-[80px] neon-glow">
+                    <span class="block text-[9px] uppercase tracking-wider text-violet-300">Skor</span>
+                    <span id="score" class="ai-text text-2xl text-violet-400 font-bold">0</span>
                 </div>
             </div>
-            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-600">
-                <p class="text-[9px] uppercase text-slate-400 text-center">Başarı Skoru</p>
-                <p class="text-xl font-black text-blue-400 text-center" id="score">0</p>
+        </div>
+
+        <div class="px-8 mb-4">
+            <div id="ai-status" class="inline-flex items-center gap-2 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700">
+                <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                <span class="text-[10px] font-bold text-gray-300 tracking-wider uppercase">Sistem Durumu: Çevrimiçi</span>
             </div>
         </div>
 
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col chat-scroll">
-            <div class="bg-blue-600 self-start p-3 rounded-2xl rounded-tl-none text-sm max-w-[85%] shadow-md">
-                Merhaba temsilci! Ben sinirli bir müşteriyim. Görüşmeyi başlatmak için mikrofona bas ve bana "Merhaba" de.
+        <div id="chat-container" class="flex-1 overflow-y-auto px-8 py-4 space-y-4 scroll-smooth">
+            <div class="bg-gray-800/80 p-4 rounded-3xl rounded-tl-none border border-gray-700 text-gray-300 text-sm leading-relaxed ai-text">
+                <span class="text-violet-400 font-bold block mb-1 tracking-tighter uppercase text-[10px]">AI Müşteri</span>
+                Merhaba temsilci. Eğitim simülasyonu başlıyor. Lütfen kendinizi tanıtarak başlayın.
             </div>
         </div>
 
-        <div id="feedback" class="text-center text-[11px] font-bold text-blue-400 py-2 bg-slate-900/30">
-            Hazırsan başla...
+        <div id="visualizer" class="h-20 flex items-center justify-center gap-2 px-8 py-2 bg-gray-900/50 opacity-0 transition-opacity duration-300">
         </div>
 
-        <div class="p-6 bg-slate-900 border-t border-slate-700">
-            <div class="flex justify-around items-center">
-                <button onclick="location.reload()" class="p-4 rounded-full bg-slate-800 border border-slate-600 active:scale-95 transition">
-                    <img src="https://img.icons8.com/ios-glyphs/24/94a3b8/refresh.png"/>
+        <div class="p-8 bg-gradient-to-t from-black to-transparent">
+            <div class="flex flex-col items-center gap-6">
+                <div id="feedback" class="text-violet-300 text-xs font-bold uppercase tracking-[0.2em] text-center">
+                    MİKROFONA BASILI TUTUNUZ
+                </div>
+                
+                <button id="mic-btn" 
+                    onmousedown="startVoice()" onmouseup="endVoice()"
+                    ontouchstart="startVoice()" ontouchend="endVoice()"
+                    class="w-28 h-28 rounded-full bg-violet-600 flex items-center justify-center border-4 border-gray-900 shadow-xl transition-all duration-300 relative">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/microphone.png"/>
                 </button>
-
-                <button id="mic-btn" onmousedown="toggleListening(true)" onmouseup="toggleListening(false)" ontouchstart="toggleListening(true)" ontouchend="toggleListening(false)" class="p-8 rounded-full bg-blue-600 shadow-2xl active:bg-blue-700 transition-all border-4 border-slate-700">
-                    <img id="mic-icon" src="https://img.icons8.com/ios-filled/40/ffffff/microphone.png"/>
-                </button>
-
-                <button onclick="finishRoleplay()" class="p-4 rounded-full bg-green-600/20 border border-green-500/50 active:scale-95 transition">
+                
+                <button onclick="finishRoleplay()" class="absolute bottom-6 right-6 p-3 rounded-full bg-green-600/20 border border-green-500/50 text-green-300 text-sm font-bold active:scale-95 transition">
                     <img src="https://img.icons8.com/ios-glyphs/24/22c55e/checkmark.png"/>
                 </button>
+                <button onclick="location.reload()" class="absolute bottom-6 left-6 p-3 rounded-full bg-gray-700/50 border border-gray-600/50 text-gray-300 text-sm font-bold active:scale-95 transition">
+                    <img src="https://img.icons8.com/ios-glyphs/24/94a3b8/refresh.png"/>
+                </button>
             </div>
-            <p class="text-center text-[10px] text-slate-500 mt-4 uppercase tracking-widest leading-none">Konuşmak için basılı tut</p>
         </div>
     </div>
 
     <script>
+        // Speech Recognition API
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'tr-TR';
-        recognition.interimResults = false;
-        recognition.continuous = false;
+        recognition.interimResults = true; // Ara sonuçları almak için
+        recognition.continuous = false; // Sürekli dinlemeyi kapat
 
+        // Speech Synthesis API
         const synth = window.speechSynthesis;
+
+        // DOM Elementleri
         const chatContainer = document.getElementById('chat-container');
         const feedback = document.getElementById('feedback');
         const micBtn = document.getElementById('mic-btn');
-        let score = 0;
+        const aiStatus = document.getElementById('ai-status');
+        const visualizer = document.getElementById('visualizer');
+        const scoreElement = document.getElementById('score');
+        let currentScore = 0;
+        let audioContext;
+        let analyser;
+        let microphone;
+        let javascriptNode;
+        let isSpeaking = false;
 
-        function addMessage(text, isUser = false) {
+        // Visualizer Barlarını Oluştur
+        for(let i=0; i<20; i++) { // Daha fazla bar
+            let bar = document.createElement('div');
+            bar.className = 'wave-bar';
+            bar.style.animationDelay = `${i * 0.06}s`; // Her bar farklı zamanda başlar
+            visualizer.appendChild(bar);
+        }
+
+        // ---------- Ses Analizi ve Görselleştirici Fonksiyonları -----------
+        async function setupAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+                
+                javascriptNode.onaudioprocess = () => {
+                    if (!isSpeaking) return; // Sadece biz konuşurken çalışır
+                    let array = new Uint8Array(analyser.frequencyBinData.length);
+                    analyser.getByteFrequencyData(array);
+                    let average = array.reduce((a, b) => a + b) / array.length;
+
+                    // Bar Yüksekliklerini Güncelle
+                    document.querySelectorAll('.wave-bar').forEach((bar, i) => {
+                        let height = Math.min(Math.max(average + (Math.sin(Date.now() / 100 + i) * 10), 10), 50); // Dinamik yükseklik
+                        bar.style.height = `${height}px`;
+                        bar.style.opacity = Math.max(0.6, height / 50);
+                    });
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.connect(javascriptNode);
+                javascriptNode.connect(audioContext.destination);
+            }
+        }
+
+        // ---------- AI Agent Core Logic -----------
+        const aiResponses = [
+            { trigger: ["merhaba", "buyurun", "tanıtıyorum"], response: "Hoş geldiniz temsilci. Dünden beri internetim yok! Durumu özetleyin.", points: 10, aiFeedback: "PROFESYONEL KARŞILAMA" },
+            { trigger: ["özür dilerim", "kusura bakmayın", "haklısınız"], response: "Özür dilemeniz güzel ama sorunum çözülmüyor! Ne zaman düzelecek?", points: 15, aiFeedback: "EMPATİ KURULDU" },
+            { trigger: ["kontrol ediyorum", "bakıyorum", "hemen ilgileniyorum"], response: "Çabuk olun lütfen, acil işlerim var.", points: 20, aiFeedback: "ÇÖZÜM ODAKLI YAKLAŞIM" },
+            { trigger: ["bilmiyorum", "yapamam", "bekleyin"], response: "Nasıl bilmezsiniz? Yeterince bekledim zaten! Yetkili birini istiyorum!", points: -25, aiFeedback: "NEGATİF İFADE, MÜŞTERİ KIZGIN" },
+            { trigger: ["iptal", "sonlandırma", "vazgeçtim"], response: "Kesinlikle iptal edeceğim! Bu hizmet kalitesi kabul edilemez.", points: -40, aiFeedback: "MÜŞTERİ KAYBEDİLİYOR" },
+            { trigger: ["çözüm öneriniz nedir", "nasıl bir yol izleyelim", "talebiniz nedir"], response: "Bana somut bir tarih verin veya fatura indirimi yapın.", points: 30, aiFeedback: "AKTİF DİNLEME VE YÖNLENDİRME" },
+            { trigger: ["fatura", "indirim", "telafi"], response: "Evet, aynen öyle! Bana tatmin edici bir telafi sunun.", points: 25, aiFeedback: "MÜŞTERİ İHTİYACI DOĞRU ANLANDI" },
+            { trigger: ["güvenliğiniz", "veri", "kimlik"], response: "Her şeyi sizinle paylaşmak zorunda mıyım? Güvenliğime ne oldu?", points: -10, aiFeedback: "GÜVEN SORUNU OLUŞTU" }
+        ];
+
+        function addMessage(text, isUser) {
             const div = document.createElement('div');
             div.className = isUser 
-                ? "bg-slate-600 self-end p-3 rounded-2xl rounded-tr-none text-sm max-w-[85%] border border-slate-500 animate-in fade-in slide-in-from-right-2"
-                : "bg-blue-600 self-start p-3 rounded-2xl rounded-tl-none text-sm max-w-[85%] shadow-lg animate-in fade-in slide-in-from-left-2";
-            div.innerText = text;
+                ? "bg-violet-600/20 ml-auto p-4 rounded-3xl rounded-tr-none border border-violet-500/30 text-violet-100 text-sm max-w-[85%] animate-in fade-in slide-in-from-right-4"
+                : "bg-gray-800/80 p-4 rounded-3xl rounded-tl-none border border-gray-700 text-gray-300 text-sm max-w-[85%] animate-in fade-in slide-in-from-left-4";
+            div.innerHTML = `<span class="${isUser?'text-violet-400':'text-violet-400'} font-bold block mb-1 tracking-tighter uppercase text-[10px] ai-text">${isUser?'SİZ':'AI MÜŞTERİ'}</span>${text}`;
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        function speak(text) {
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = 'tr-TR';
-            utter.pitch = 0.85; // Hafif kalın/sinirli ses
-            utter.rate = 1.1;
-            synth.speak(utter);
+        async function processUserInput(input) {
+            let matched = false;
+            for (let item of aiResponses) {
+                if (item.trigger.some(t => input.includes(t))) {
+                    updateScoreAndFeedback(item.points, item.aiFeedback);
+                    await speakResponse(item.response);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                updateScoreAndFeedback(-5, "BELİRSİZ YANIT");
+                await speakResponse("Söylediğinizi anlayamadım, daha açık konuşur musunuz?");
+            }
         }
 
-        function toggleListening(start) {
-            if (start) {
-                try {
-                    recognition.start();
-                    micBtn.classList.add('active-mic', 'bg-red-600');
-                    feedback.innerText = "Sizi dinliyorum...";
-                } catch(e) {}
-            } else {
-                recognition.stop();
-                micBtn.classList.remove('active-mic', 'bg-red-600');
-            }
+        function updateScoreAndFeedback(points, aiFeedback) {
+            currentScore += points;
+            scoreElement.innerText = currentScore;
+            aiStatus.innerHTML = `<div class="w-2 h-2 rounded-full ${points > 0 ? 'bg-green-400' : 'bg-red-500'} animate-pulse"></div><span class="text-[10px] font-bold ${points > 0 ? 'text-green-400' : 'text-red-500'} tracking-wider uppercase">${aiFeedback}</span>`;
+            feedback.innerText = points > 0 ? `+${points} PUAN! ${aiFeedback}` : `${points} PUAN! ${aiFeedback}`;
+        }
+
+        async function speakResponse(text) {
+            return new Promise((resolve) => {
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'tr-TR';
+                utter.pitch = 0.9;
+                utter.rate = 1.1; // Müşteri biraz hızlı konuşsun
+                utter.onstart = () => isSpeaking = true;
+                utter.onend = () => {
+                    isSpeaking = false;
+                    resolve();
+                    feedback.innerText = "SIRA SİZDE";
+                };
+                synth.speak(utter);
+            });
+        }
+
+        // ---------- Event Listeners ----------
+        async function startVoice() {
+            if (!audioContext) await setupAudioContext(); // İlk kez tıklanınca AudioContext'i başlat
+            try { 
+                recognition.start();
+                micBtn.classList.add('mic-active');
+                visualizer.style.opacity = "1";
+                feedback.innerText = "DİNLENİYOR...";
+                isSpeaking = true; // Dalgaları çalıştırmak için
+            } catch(e) {}
+        }
+
+        function endVoice() {
+            recognition.stop();
+            micBtn.classList.remove('mic-active');
+            visualizer.style.opacity = "0";
+            feedback.innerText = "YANIT ANALİZ EDİLİYOR...";
+            isSpeaking = false; // Dalgaları durdurmak için
         }
 
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript.toLowerCase();
-            addMessage(transcript, true);
-            processAI(transcript);
+            if (event.results[0].isFinal) {
+                const finalTranscript = event.results[0][0].transcript.toLowerCase();
+                addMessage(finalTranscript, true);
+                processUserInput(finalTranscript);
+                micBtn.classList.remove('mic-active');
+                visualizer.style.opacity = "0";
+            }
+        };
+        
+        recognition.onend = () => {
+             // Eğer manuel olarak durdurulmadıysa veya bir sonuç gelmediyse, tekrar dinlemeyi başlatma
+            if (micBtn.classList.contains('mic-active')) { // Eğer hala basılı tutuluyorsa
+                 recognition.start(); // Tekrar başlat
+            } else {
+                feedback.innerText = "SIRA SİZDE";
+            }
         };
 
-        function processAI(input) {
-            let response = "";
-            let points = 0;
-            let tip = "";
-
-            if (input.includes("merhaba") || input.includes("buyurun")) {
-                response = "Nihayet bağlandınız! İnternetim yok diyorum, dünden beri bekliyorum!";
-                points = 10;
-                tip = "✅ Güzel karşılama!";
-            } else if (input.includes("özür") || input.includes("kusura bakma") || input.includes("haklısınız")) {
-                response = "Özür dilemek yetmez, işim gücüm aksadı. Ne zaman düzelir?";
-                points = 20;
-                tip = "⭐ Empati kurdun!";
-            } else if (input.includes("hemen") || input.includes("kontrol") || input.includes("bakıyorum")) {
-                response = "Bakın bakalım, her seferinde aynı şeyi söylüyorsunuz zaten.";
-                points = 15;
-                tip = "⚡ Hızlı aksiyon!";
-            } else if (input.includes("bilmiyorum") || input.includes("bekle")) {
-                response = "Nasıl bilmezsin kardeşim, kapat telefonu yetkili birini ver!";
-                points = -20;
-                tip = "❌ Negatif kelime!";
-            } else {
-                response = "Anlamadım ne diyorsunuz? İnternetim ne zaman gelecek?";
-                points = -5;
-                tip = "⚠️ Daha net konuşmalısın.";
-            }
-
-            score += points;
-            document.getElementById('score').innerText = score;
-            feedback.innerText = tip;
-
-            setTimeout(() => {
-                addMessage(response);
-                speak(response);
-            }, 700);
-        }
-
         function finishRoleplay() {
-            let rank = score > 40 ? "🥇 Uzman Temsilci" : (score > 10 ? "🥈 Gelişmekte" : "🥉 Tekrar Çalışmalı");
-            alert(`SİMÜLASYON RAPORU\n----------------\nSkor: ${score}\nSeviye: ${rank}\n\nYöneticine bu skoru göstermek için ekran görüntüsü alabilirsin!`);
+            let rank = "";
+            if (currentScore > 70) rank = "🥇 YÜKSEK BAŞARI - CANLIYA HAZIR!";
+            else if (currentScore > 30) rank = "🥈 İYİ PERFORMANS - GELİŞTİRİLEBİLİR";
+            else rank = "🥉 TEKRAR ÇALIŞMALI - EĞİTİM GEREKLİ";
+
+            alert(`--- SİMÜLASYON SONUCU ---\n\nToplam Skor: ${currentScore}\nDeğerlendirme: ${rank}\n\nBu raporu yöneticinizle paylaşın!`);
         }
+
+        // Başlangıç mesajını konuşma
+        window.onload = () => {
+            speakResponse("Merhaba temsilci. Eğitim simülasyonu başlıyor. Lütfen kendinizi tanıtarak başlayın.");
+        };
     </script>
 </body>
 </html>
