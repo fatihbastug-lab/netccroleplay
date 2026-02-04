@@ -2,85 +2,84 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Call Center AI Simulator Pro</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .active-mic { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); animation: pulse 1s infinite; }
+        body { background-color: #0f172a; touch-action: manipulation; }
+        .active-mic { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+        .chat-scroll::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
-<body class="bg-slate-900 flex justify-center items-center min-h-screen p-4 font-sans text-white">
+<body class="flex justify-center items-center min-h-screen font-sans text-white">
 
-    <div class="max-w-md w-full bg-slate-800 rounded-[2.5rem] border-[6px] border-slate-700 shadow-2xl overflow-hidden flex flex-col h-[85vh]">
+    <div class="max-w-md w-full bg-slate-800 rounded-[2.5rem] border-[6px] border-slate-700 shadow-2xl overflow-hidden flex flex-col h-[90vh] relative">
         
         <div class="p-6 bg-slate-700/50 border-b border-slate-600 flex justify-between items-center">
             <div>
-                <h1 class="text-lg font-bold">Eğitim Simülatörü</h1>
-                <p id="call-status" class="text-xs text-green-400 font-mono italic">Sistem Hazır...</p>
+                <h1 class="text-lg font-bold">Asistan Pro 2.0</h1>
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <p id="call-status" class="text-[10px] text-green-400 font-mono">CANLI SİMÜLASYON</p>
+                </div>
             </div>
-            <div class="text-right">
-                <span class="text-2xl font-black text-blue-400" id="score">0</span>
-                <p class="text-[10px] uppercase tracking-tighter text-slate-400">Performans Skoru</p>
-            </div>
-        </div>
-
-        <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col">
-            <div class="bg-blue-600 self-start p-3 rounded-2xl rounded-tl-none text-sm max-w-[80%] shadow-md">
-                Merhaba! Ben AI Müşteri. Görüşmeyi başlatmak için aşağıdaki mikrofona tıkla ve konuşmaya başla.
+            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-600">
+                <p class="text-[9px] uppercase text-slate-400 text-center">Başarı Skoru</p>
+                <p class="text-xl font-black text-blue-400 text-center" id="score">0</p>
             </div>
         </div>
 
-        <div class="p-8 bg-slate-900/80">
-            <div id="feedback" class="text-center text-xs text-slate-400 mb-6 min-h-[20px]">
-                Mikrofona bas ve "Merhaba" diyerek başla...
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col chat-scroll">
+            <div class="bg-blue-600 self-start p-3 rounded-2xl rounded-tl-none text-sm max-w-[85%] shadow-md">
+                Merhaba temsilci! Ben sinirli bir müşteriyim. Görüşmeyi başlatmak için mikrofona bas ve bana "Merhaba" de.
             </div>
-            
-            <div class="flex justify-center items-center gap-8">
-                <button onclick="location.reload()" class="p-3 rounded-full bg-slate-700 hover:bg-slate-600 transition">
-                    <img src="https://img.icons8.com/ios-glyphs/24/ffffff/refresh.png"/>
+        </div>
+
+        <div id="feedback" class="text-center text-[11px] font-bold text-blue-400 py-2 bg-slate-900/30">
+            Hazırsan başla...
+        </div>
+
+        <div class="p-6 bg-slate-900 border-t border-slate-700">
+            <div class="flex justify-around items-center">
+                <button onclick="location.reload()" class="p-4 rounded-full bg-slate-800 border border-slate-600 active:scale-95 transition">
+                    <img src="https://img.icons8.com/ios-glyphs/24/94a3b8/refresh.png"/>
                 </button>
 
-                <button id="mic-btn" onclick="toggleListening()" class="p-8 rounded-full bg-blue-600 hover:bg-blue-500 transition-all shadow-xl relative">
+                <button id="mic-btn" onmousedown="toggleListening(true)" onmouseup="toggleListening(false)" ontouchstart="toggleListening(true)" ontouchend="toggleListening(false)" class="p-8 rounded-full bg-blue-600 shadow-2xl active:bg-blue-700 transition-all border-4 border-slate-700">
                     <img id="mic-icon" src="https://img.icons8.com/ios-filled/40/ffffff/microphone.png"/>
-                    <div id="visualizer" class="absolute inset-0 rounded-full border-4 border-blue-400 opacity-0"></div>
                 </button>
 
-                <button onclick="showReport()" class="p-3 rounded-full bg-green-600 hover:bg-green-500 transition">
-                    <img src="https://img.icons8.com/ios-glyphs/24/ffffff/checkmark.png"/>
+                <button onclick="finishRoleplay()" class="p-4 rounded-full bg-green-600/20 border border-green-500/50 active:scale-95 transition">
+                    <img src="https://img.icons8.com/ios-glyphs/24/22c55e/checkmark.png"/>
                 </button>
             </div>
+            <p class="text-center text-[10px] text-slate-500 mt-4 uppercase tracking-widest leading-none">Konuşmak için basılı tut</p>
         </div>
     </div>
 
     <script>
-        // Ses Tanıma ve Sentezleme Ayarları
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'tr-TR';
         recognition.interimResults = false;
+        recognition.continuous = false;
 
         const synth = window.speechSynthesis;
         const chatContainer = document.getElementById('chat-container');
         const feedback = document.getElementById('feedback');
         const micBtn = document.getElementById('mic-btn');
-        let isListening = false;
         let score = 0;
-
-        // Senaryo Mantığı (Müşteri Reaksiyonları)
-        const scenarios = [
-            { trigger: "merhaba", response: "Merhaba, dünden beri internetim yok. Çok sinirliyim!", points: 10 },
-            { trigger: "özür", response: "Özür dilemeniz faturamı ödemiyor. Ne zaman düzelecek?", points: 20 },
-            { trigger: "hemen", response: "Tamam, bekliyorum. Ama tekrar kesilirse aboneliğimi iptal edeceğim.", points: 15 },
-            { trigger: "kayıt", response: "Arıza kaydı oluşturun lütfen, bir de takip numarası verin.", points: 25 },
-            { trigger: "iptal", response: "İptal etmek istiyorum dedim size, neden anlamıyorsunuz?", points: -10 }
-        ];
 
         function addMessage(text, isUser = false) {
             const div = document.createElement('div');
             div.className = isUser 
-                ? "bg-slate-700 self-end p-3 rounded-2xl rounded-tr-none text-sm max-w-[80%] shadow-md border border-slate-600"
-                : "bg-blue-600 self-start p-3 rounded-2xl rounded-tl-none text-sm max-w-[80%] shadow-md";
+                ? "bg-slate-600 self-end p-3 rounded-2xl rounded-tr-none text-sm max-w-[85%] border border-slate-500 animate-in fade-in slide-in-from-right-2"
+                : "bg-blue-600 self-start p-3 rounded-2xl rounded-tl-none text-sm max-w-[85%] shadow-lg animate-in fade-in slide-in-from-left-2";
             div.innerText = text;
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -89,19 +88,21 @@
         function speak(text) {
             const utter = new SpeechSynthesisUtterance(text);
             utter.lang = 'tr-TR';
-            utter.pitch = 0.9;
-            utter.rate = 1;
+            utter.pitch = 0.85; // Hafif kalın/sinirli ses
+            utter.rate = 1.1;
             synth.speak(utter);
         }
 
-        function toggleListening() {
-            if (isListening) {
-                recognition.stop();
+        function toggleListening(start) {
+            if (start) {
+                try {
+                    recognition.start();
+                    micBtn.classList.add('active-mic', 'bg-red-600');
+                    feedback.innerText = "Sizi dinliyorum...";
+                } catch(e) {}
             } else {
-                recognition.start();
-                feedback.innerText = "Sizi dinliyorum...";
-                micBtn.classList.add('active-mic');
-                isListening = true;
+                recognition.stop();
+                micBtn.classList.remove('active-mic', 'bg-red-600');
             }
         }
 
@@ -111,32 +112,46 @@
             processAI(transcript);
         };
 
-        recognition.onend = () => {
-            micBtn.classList.remove('active-mic');
-            isListening = false;
-        };
-
         function processAI(input) {
-            let foundResponse = "Söylediğinizi tam anlayamadım, tekrar eder misiniz?";
-            
-            for (let s of scenarios) {
-                if (input.includes(s.trigger)) {
-                    foundResponse = s.response;
-                    score += s.points;
-                    document.getElementById('score').innerText = score;
-                    break;
-                }
+            let response = "";
+            let points = 0;
+            let tip = "";
+
+            if (input.includes("merhaba") || input.includes("buyurun")) {
+                response = "Nihayet bağlandınız! İnternetim yok diyorum, dünden beri bekliyorum!";
+                points = 10;
+                tip = "✅ Güzel karşılama!";
+            } else if (input.includes("özür") || input.includes("kusura bakma") || input.includes("haklısınız")) {
+                response = "Özür dilemek yetmez, işim gücüm aksadı. Ne zaman düzelir?";
+                points = 20;
+                tip = "⭐ Empati kurdun!";
+            } else if (input.includes("hemen") || input.includes("kontrol") || input.includes("bakıyorum")) {
+                response = "Bakın bakalım, her seferinde aynı şeyi söylüyorsunuz zaten.";
+                points = 15;
+                tip = "⚡ Hızlı aksiyon!";
+            } else if (input.includes("bilmiyorum") || input.includes("bekle")) {
+                response = "Nasıl bilmezsin kardeşim, kapat telefonu yetkili birini ver!";
+                points = -20;
+                tip = "❌ Negatif kelime!";
+            } else {
+                response = "Anlamadım ne diyorsunuz? İnternetim ne zaman gelecek?";
+                points = -5;
+                tip = "⚠️ Daha net konuşmalısın.";
             }
 
+            score += points;
+            document.getElementById('score').innerText = score;
+            feedback.innerText = tip;
+
             setTimeout(() => {
-                addMessage(foundResponse);
-                speak(foundResponse);
-                feedback.innerText = "Yanıt sırası sizde...";
-            }, 800);
+                addMessage(response);
+                speak(response);
+            }, 700);
         }
 
-        function showReport() {
-            alert(`Simülasyon Bitti!\nToplam Puan: ${score}\nDeğerlendirme: ${score > 50 ? 'Başarılı - Canlıya Çıkabilir' : 'Yetersiz - Tekrar Eğitime'}`);
+        function finishRoleplay() {
+            let rank = score > 40 ? "🥇 Uzman Temsilci" : (score > 10 ? "🥈 Gelişmekte" : "🥉 Tekrar Çalışmalı");
+            alert(`SİMÜLASYON RAPORU\n----------------\nSkor: ${score}\nSeviye: ${rank}\n\nYöneticine bu skoru göstermek için ekran görüntüsü alabilirsin!`);
         }
     </script>
 </body>
