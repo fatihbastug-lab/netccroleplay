@@ -1,140 +1,143 @@
-import 'package:flutter/material.dart';
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Center AI Simulator Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .active-mic { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-900 flex justify-center items-center min-h-screen p-4 font-sans text-white">
 
-void main() => runApp(CallRolePlayApp());
+    <div class="max-w-md w-full bg-slate-800 rounded-[2.5rem] border-[6px] border-slate-700 shadow-2xl overflow-hidden flex flex-col h-[85vh]">
+        
+        <div class="p-6 bg-slate-700/50 border-b border-slate-600 flex justify-between items-center">
+            <div>
+                <h1 class="text-lg font-bold">Eğitim Simülatörü</h1>
+                <p id="call-status" class="text-xs text-green-400 font-mono italic">Sistem Hazır...</p>
+            </div>
+            <div class="text-right">
+                <span class="text-2xl font-black text-blue-400" id="score">0</span>
+                <p class="text-[10px] uppercase tracking-tighter text-slate-400">Performans Skoru</p>
+            </div>
+        </div>
 
-class CallRolePlayApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Inter',
-        useMaterial3: true,
-      ),
-      home: ScenarioSelectionScreen(),
-    );
-  }
-}
+        <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col">
+            <div class="bg-blue-600 self-start p-3 rounded-2xl rounded-tl-none text-sm max-w-[80%] shadow-md">
+                Merhaba! Ben AI Müşteri. Görüşmeyi başlatmak için aşağıdaki mikrofona tıkla ve konuşmaya başla.
+            </div>
+        </div>
 
-class ScenarioSelectionScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> scenarios = [
-    {'title': 'Agresif Müşteri', 'level': 'Zor', 'icon': '🔥', 'color': Colors.red},
-    {'title': 'Bilgi Güncelleme', 'level': 'Kolay', 'icon': '📝', 'color': Colors.green},
-    {'title': 'İptal İkna', 'level': 'Orta', 'icon': '💡', 'color': Colors.orange},
-    {'title': 'Teknik Destek', 'level': 'Orta', 'icon': '🛠️', 'color': Colors.blue},
-  ];
+        <div class="p-8 bg-slate-900/80">
+            <div id="feedback" class="text-center text-xs text-slate-400 mb-6 min-h-[20px]">
+                Mikrofona bas ve "Merhaba" diyerek başla...
+            </div>
+            
+            <div class="flex justify-center items-center gap-8">
+                <button onclick="location.reload()" class="p-3 rounded-full bg-slate-700 hover:bg-slate-600 transition">
+                    <img src="https://img.icons8.com/ios-glyphs/24/ffffff/refresh.png"/>
+                </button>
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFFF6F7FB),
-      appBar: AppBar(
-        title: Text('Eğitim Kampı', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Hoş geldin Temsilci! 👋", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text("Bugün hangi senaryo üzerinde çalışmak istersin?", style: TextStyle(color: Colors.grey[600])),
-            SizedBox(height: 20),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: scenarios.length,
-                itemBuilder: (context, index) {
-                  var item = scenarios[index];
-                  return GestureDetector(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => RolePlayScreen(item))),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(item['icon'], style: TextStyle(fontSize: 40)),
-                          SizedBox(height: 10),
-                          Text(item['title'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          SizedBox(height: 5),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: item['color'].withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(item['level'], style: TextStyle(color: item['color'], fontSize: 12, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+                <button id="mic-btn" onclick="toggleListening()" class="p-8 rounded-full bg-blue-600 hover:bg-blue-500 transition-all shadow-xl relative">
+                    <img id="mic-icon" src="https://img.icons8.com/ios-filled/40/ffffff/microphone.png"/>
+                    <div id="visualizer" class="absolute inset-0 rounded-full border-4 border-blue-400 opacity-0"></div>
+                </button>
 
-class RolePlayScreen extends StatelessWidget {
-  final Map<String, dynamic> scenario;
-  RolePlayScreen(this.scenario);
+                <button onclick="showReport()" class="p-3 rounded-full bg-green-600 hover:bg-green-500 transition">
+                    <img src="https://img.icons8.com/ios-glyphs/24/ffffff/checkmark.png"/>
+                </button>
+            </div>
+        </div>
+    </div>
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF1A1A2E), // Koyu mod, odaklanmayı artırır
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0, iconTheme: IconThemeData(color: Colors.white)),
-      body: Column(
-        children: [
-          SizedBox(height: 20),
-          CircleAvatar(radius: 50, backgroundColor: Colors.white24, child: Text(scenario['icon'], style: TextStyle(fontSize: 40))),
-          SizedBox(height: 10),
-          Text("Müşteri Bağlanıyor...", style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w500)),
-          Text(scenario['title'], style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-          Spacer(),
-          // Dalga efekti (Ses algılama görseli buraya gelecek)
-          Container(height: 100, child: Center(child: Icon(Icons.graphic_eq, color: Colors.blueAccent, size: 80))),
-          Spacer(),
-          Padding(
-            padding: const EdgeInsets.all(30.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _actionBtn(Icons.call_end, Colors.red, "Bitir"),
-                _actionBtn(Icons.mic, Colors.blueAccent, "Konuş"),
-                _actionBtn(Icons.pause, Colors.grey, "Beklet"),
-              ],
-            ),
-          ),
-          SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
+    <script>
+        // Ses Tanıma ve Sentezleme Ayarları
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'tr-TR';
+        recognition.interimResults = false;
 
-  Widget _actionBtn(IconData icon, Color color, String label) {
-    return Column(
-      children: [
-        FloatingActionButton(onPressed: () {}, backgroundColor: color, child: Icon(icon, color: Colors.white)),
-        SizedBox(height: 8),
-        Text(label, style: TextStyle(color: Colors.white70, fontSize: 12)),
-      ],
-    );
-  }
-}
+        const synth = window.speechSynthesis;
+        const chatContainer = document.getElementById('chat-container');
+        const feedback = document.getElementById('feedback');
+        const micBtn = document.getElementById('mic-btn');
+        let isListening = false;
+        let score = 0;
+
+        // Senaryo Mantığı (Müşteri Reaksiyonları)
+        const scenarios = [
+            { trigger: "merhaba", response: "Merhaba, dünden beri internetim yok. Çok sinirliyim!", points: 10 },
+            { trigger: "özür", response: "Özür dilemeniz faturamı ödemiyor. Ne zaman düzelecek?", points: 20 },
+            { trigger: "hemen", response: "Tamam, bekliyorum. Ama tekrar kesilirse aboneliğimi iptal edeceğim.", points: 15 },
+            { trigger: "kayıt", response: "Arıza kaydı oluşturun lütfen, bir de takip numarası verin.", points: 25 },
+            { trigger: "iptal", response: "İptal etmek istiyorum dedim size, neden anlamıyorsunuz?", points: -10 }
+        ];
+
+        function addMessage(text, isUser = false) {
+            const div = document.createElement('div');
+            div.className = isUser 
+                ? "bg-slate-700 self-end p-3 rounded-2xl rounded-tr-none text-sm max-w-[80%] shadow-md border border-slate-600"
+                : "bg-blue-600 self-start p-3 rounded-2xl rounded-tl-none text-sm max-w-[80%] shadow-md";
+            div.innerText = text;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function speak(text) {
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'tr-TR';
+            utter.pitch = 0.9;
+            utter.rate = 1;
+            synth.speak(utter);
+        }
+
+        function toggleListening() {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                feedback.innerText = "Sizi dinliyorum...";
+                micBtn.classList.add('active-mic');
+                isListening = true;
+            }
+        }
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            addMessage(transcript, true);
+            processAI(transcript);
+        };
+
+        recognition.onend = () => {
+            micBtn.classList.remove('active-mic');
+            isListening = false;
+        };
+
+        function processAI(input) {
+            let foundResponse = "Söylediğinizi tam anlayamadım, tekrar eder misiniz?";
+            
+            for (let s of scenarios) {
+                if (input.includes(s.trigger)) {
+                    foundResponse = s.response;
+                    score += s.points;
+                    document.getElementById('score').innerText = score;
+                    break;
+                }
+            }
+
+            setTimeout(() => {
+                addMessage(foundResponse);
+                speak(foundResponse);
+                feedback.innerText = "Yanıt sırası sizde...";
+            }, 800);
+        }
+
+        function showReport() {
+            alert(`Simülasyon Bitti!\nToplam Puan: ${score}\nDeğerlendirme: ${score > 50 ? 'Başarılı - Canlıya Çıkabilir' : 'Yetersiz - Tekrar Eğitime'}`);
+        }
+    </script>
+</body>
+</html>
